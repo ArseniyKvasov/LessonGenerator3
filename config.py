@@ -19,7 +19,7 @@ class Settings:
     pollinations_base_url: str = os.getenv("POLLINATIONS_BASE_URL", "https://gen.pollinations.ai")
     pollinations_timeout_seconds: float = float(os.getenv("POLLINATIONS_TIMEOUT_SECONDS", "60"))
     pollinations_image_model: str = os.getenv("POLLINATIONS_IMAGE_MODEL", "gptimage")
-    pollinations_image_size: str = os.getenv("POLLINATIONS_IMAGE_SIZE", "512x512")
+    pollinations_image_size: str = os.getenv("POLLINATIONS_IMAGE_SIZE", "1024x576")
     pollinations_image_quality: str = os.getenv("POLLINATIONS_IMAGE_QUALITY", "low")
     pollinations_audio_model: str = os.getenv("POLLINATIONS_AUDIO_MODEL", "qwen-tts")
     pollinations_audio_voice: str = os.getenv("POLLINATIONS_AUDIO_VOICE", "alloy")

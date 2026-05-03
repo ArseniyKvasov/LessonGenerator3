@@ -27,7 +27,7 @@ Required:
 
 Pollinations defaults are set for low resource usage:
 
-- Images: `gptimage`, `512x512`, `low`.
+- Images: `gptimage`, `1024x576`, `low`.
 - Audio: `qwen-tts`, `mp3`.
 
 You can override them with:

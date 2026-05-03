@@ -315,7 +315,7 @@ def _build_reading_prompt(
         "available_task_types": {
             "reading_article": {
                 "json": {"type": "reading_article", "content": "string"},
-                "rules": ["You can use markdown bold a little.", "You must actively use \\n for line breaking.", "Don't make the article too short.", "Try to make article longer and use several paragraphs."],
+                "rules": ["Mark the article title in bold markdown.", "You can use markdown bold a little.", "You must actively use \\n for line breaking.", "Try to make article longer and use several paragraphs."],
             },
             "test": {
                 "json": {

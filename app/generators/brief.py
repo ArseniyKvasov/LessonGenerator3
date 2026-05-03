@@ -4,7 +4,7 @@ from typing import Any, Optional
 from app.clients.groq import call_ai
 
 
-MAX_USER_REQUEST_LENGTH = 1000
+MAX_USER_REQUEST_LENGTH = 3000
 MAX_ATTEMPTS = 3
 
 

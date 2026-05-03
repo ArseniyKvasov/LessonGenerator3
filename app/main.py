@@ -29,7 +29,7 @@ _jobs_lock = threading.Lock()
 
 
 class BriefGenerateRequest(BaseModel):
-    user_request: str = Field(..., min_length=1, max_length=1000)
+    user_request: str = Field(..., min_length=1, max_length=3000)
 
 
 class TasksGenerateRequest(BaseModel):

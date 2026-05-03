@@ -197,6 +197,9 @@ def _build_vocabulary_prompt(
                 "rules": [
                     "Give from 6 to 10 gaps.",
                     "Mark gaps as ___.",
+                    "Unless explicitly requested otherwise, use independent sentences instead of one connected text.",
+                    "Each sentence must be on a separate line.",
+                    "Prefer exactly one gap per sentence.",
                     "You mustn't use more than one gap per sentence.",
                     "You must use line breaking (\\n).",
                 ],
@@ -303,7 +306,6 @@ def _build_reading_prompt(
             "Second, generate this article. Third, add a task to check student's understanding."
         ),
         "lesson_vocabulary": sections.get("vocabulary", []),
-        "lesson_grammar": sections.get("grammar", ""),
         "section_instruction": reading,
         "rules": [
             "Return only valid JSON.",
@@ -314,7 +316,7 @@ def _build_reading_prompt(
         "available_task_types": {
             "reading_article": {
                 "json": {"type": "reading_article", "content": "string"},
-                "rules": ["You can use markdown bold a little.", "You must actively use \\n for line breaking.", "Don't make the article too short."],
+                "rules": ["You can use markdown bold a little.", "You must actively use \\n for line breaking.", "Don't make the article too short.", "Try to make article longer and use several paragraphs."],
             },
             "test": {
                 "json": {
@@ -366,11 +368,11 @@ def _build_listening_prompt(
             "Second, generate a listening script. Third, add a task to check student's understanding."
         ),
         "lesson_vocabulary": sections.get("vocabulary", []),
-        "lesson_grammar": sections.get("grammar", ""),
         "section_instruction": listening,
         "rules": [
             "Return only valid JSON.",
             "Do not add markdown outside JSON.",
+            "Try to make script longer.",
             "You don't need to use all the vocabulary or grammar.",
             "Just take some key points.",
         ],
@@ -428,13 +430,12 @@ def _build_speaking_prompt(
     payload = {
         "lesson_topic": brief.get("topic", ""),
         "lesson_vocabulary": sections.get("vocabulary", []),
-        "lesson_grammar": sections.get("grammar", ""),
         "task": "You are creating a speaking section for a personal lesson.",
         "section_instruction": speaking,
         "available_task_types": {
             "image_description": {
                 "json": {"type": "image_description", "image_description": "string"},
-                "rules": ["Use this only when an image would help the discussion."],
+                "rules": ["Use this if an image would help the discussion."],
             },
             "speaking_questions": {
                 "json": {"type": "speaking_questions", "speaking_questions": ["string"]},

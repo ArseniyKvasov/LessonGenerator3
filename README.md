@@ -70,6 +70,12 @@ docker build -t lesson-generator-api .
 docker run --env-file .env -p 8000:8000 lesson-generator-api
 ```
 
+## Docker Compose
+
+```bash
+docker compose up --build
+```
+
 ## Examples
 
 Generate a brief job:

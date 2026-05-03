@@ -190,9 +190,9 @@ def _build_vocabulary_prompt(
             "fill_gaps": {
                 "json": {"type": "fill_gaps", "text": "string", "answers": ["string"]},
                 "rules": [
-                    "Give from 5 to 10 gaps.",
+                    "Give from 6 to 10 gaps.",
                     "Mark gaps as ___.",
-                    "Use one gap per sentence.",
+                    "You mustn't use more than one gap per sentence.",
                     "Use \\n for line breaking.",
                 ],
             },
@@ -237,6 +237,9 @@ def _build_grammar_prompt(
                 "rules": [
                     "Mark gaps as ___.",
                     "Give base words if it is needed for the task.",
+                    "Give from 6 to 10 gaps.",
+                    "You mustn't use more than one gap per sentence.",
+                    "Use \\n for line breaking.",
                 ],
             },
             "test": {
@@ -304,9 +307,9 @@ def _build_reading_prompt(
             "Just take some key points.",
         ],
         "available_task_types": {
-            "reading_text": {
-                "json": {"type": "reading_text", "content": "string"},
-                "rules": ["Use markdown.", "Bold is available."],
+            "reading_article": {
+                "json": {"type": "reading_article", "content": "string"},
+                "rules": ["Use markdown and \\n for line breaking.", "Bold is available.", "Don't make the article too short."],
             },
             "test": {
                 "json": {
@@ -560,7 +563,7 @@ async def _generate_reading_section(brief: dict[str, Any], reading: str) -> dict
 
         task_type = task.get("type")
 
-        if task_type == "reading_text":
+        if task_type == "reading_article":
             content = task.get("content")
             if isinstance(content, str) and content.strip():
                 tasks.append({"type": "note", "content": content})
@@ -593,7 +596,7 @@ def _script_to_text(script: Any) -> str:
 
         if isinstance(text, str) and text.strip():
             if isinstance(speaker, str) and speaker.strip():
-                lines.append(f"{speaker.strip()}: {text.strip()}")
+                lines.append(f"**{speaker.strip()}:** {text.strip()}")
             else:
                 lines.append(text.strip())
 

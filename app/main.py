@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional
 from datetime import datetime, timezone
 import threading
@@ -13,6 +14,12 @@ from app.generators.brief import generate_brief
 from app.generators.tasks import generate_tasks
 from config import settings
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Lesson Generator API")
 
@@ -67,6 +74,7 @@ def _create_job(job_type: str) -> str:
             "error": None,
         }
 
+    logger.info("Created %s generation job %s", job_type, job_id)
     return job_id
 
 
@@ -88,22 +96,27 @@ def _get_job(job_id: str) -> Job | None:
 
 def _run_job(job_id: str, generator, failure_message: str, *args: Any) -> None:
     _update_job(job_id, status="running")
+    logger.info("Started generation job %s", job_id)
 
     try:
         result = generator(*args)
     except Exception as exc:
         _update_job(job_id, status="failed", error=f"{failure_message}: {exc}")
+        logger.exception("Generation job %s failed with an exception", job_id)
         return
 
     if result.get("status") != "ok":
+        error = result.get("error", failure_message)
         _update_job(
             job_id,
             status="failed",
-            error=result.get("error", failure_message),
+            error=error,
         )
+        logger.error("Generation job %s failed: %s", job_id, error)
         return
 
     _update_job(job_id, status="succeeded", result=result)
+    logger.info("Generation job %s succeeded", job_id)
 
 
 @app.post("/generate/brief/", status_code=status.HTTP_202_ACCEPTED)

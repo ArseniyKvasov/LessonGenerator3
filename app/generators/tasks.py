@@ -5,7 +5,7 @@ from typing import Any, Optional
 from app.clients.groq import call_ai
 from app.clients.pollinations import generate_audio, generate_image
 
-MAX_ATTEMPTS = 2
+MAX_ATTEMPTS = 3
 MEDIA_TIMEOUT = 60
 
 
@@ -193,7 +193,7 @@ def _build_vocabulary_prompt(
                     "Give from 6 to 10 gaps.",
                     "Mark gaps as ___.",
                     "You mustn't use more than one gap per sentence.",
-                    "Use \\n for line breaking.",
+                    "You must use line breaking (\\n).",
                 ],
             },
         },
@@ -227,7 +227,7 @@ def _build_grammar_prompt(
                 "rules": [
                     "content must include markdown.",
                     "Bold and italic are available.",
-                    "Use \\n for line breaking.",
+                    "You must use line breaking (\\n).",
                     "Do not give explanations or tasks in note.",
                     "Just give some examples.",
                 ],
@@ -239,7 +239,7 @@ def _build_grammar_prompt(
                     "Give base words if it is needed for the task.",
                     "Give from 6 to 10 gaps.",
                     "You mustn't use more than one gap per sentence.",
-                    "Use \\n for line breaking.",
+                    "You must use line breaking (\\n).",
                 ],
             },
             "test": {
@@ -309,7 +309,7 @@ def _build_reading_prompt(
         "available_task_types": {
             "reading_article": {
                 "json": {"type": "reading_article", "content": "string"},
-                "rules": ["Use markdown and \\n for line breaking.", "Bold is available.", "Don't make the article too short."],
+                "rules": ["You can use markdown bold a little.", "You must actively use \\n for line breaking.", "Don't make the article too short."],
             },
             "test": {
                 "json": {
@@ -689,10 +689,8 @@ async def _generate_image_file(description: str) -> dict[str, Any]:
     }
 
 
-def _build_speaking_note(questions: list[str], has_image: bool) -> dict[str, str]:
-    instruction = "Discuss the image" if has_image else "Discuss the questions"
-
-    lines = [f"**{instruction}**", ""]
+def _build_speaking_note(questions: list[str]) -> dict[str, str]:
+    lines = [f"**Discuss the questions**", ""]
 
     for index, question in enumerate(questions, start=1):
         if isinstance(question, str) and question.strip():
@@ -734,7 +732,7 @@ async def _generate_speaking_section(brief: dict[str, Any], speaking: str) -> di
         tasks.append(await _generate_image_file(image_description))
 
     if questions:
-        tasks.append(_build_speaking_note(questions, bool(image_description)))
+        tasks.append(_build_speaking_note(questions))
 
     return {"tasks": tasks}
 

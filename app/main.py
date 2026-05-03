@@ -16,7 +16,7 @@ from config import settings
 
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.ERROR,
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -74,7 +74,6 @@ def _create_job(job_type: str) -> str:
             "error": None,
         }
 
-    logger.info("Created %s generation job %s", job_type, job_id)
     return job_id
 
 
@@ -96,7 +95,6 @@ def _get_job(job_id: str) -> Job | None:
 
 def _run_job(job_id: str, generator, failure_message: str, *args: Any) -> None:
     _update_job(job_id, status="running")
-    logger.info("Started generation job %s", job_id)
 
     try:
         result = generator(*args)
@@ -116,7 +114,6 @@ def _run_job(job_id: str, generator, failure_message: str, *args: Any) -> None:
         return
 
     _update_job(job_id, status="succeeded", result=result)
-    logger.info("Generation job %s succeeded", job_id)
 
 
 @app.post("/generate/brief/", status_code=status.HTTP_202_ACCEPTED)

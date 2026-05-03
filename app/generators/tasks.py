@@ -8,7 +8,6 @@ from app.clients.pollinations import generate_audio, generate_image
 
 MAX_ATTEMPTS = 3
 MEDIA_TIMEOUT = 60
-LOG_PAYLOAD_PREVIEW_LENGTH = 1000
 
 logger = logging.getLogger(__name__)
 
@@ -474,12 +473,6 @@ async def _call_ai_json(section_name: str, prompt_builder, *args) -> dict[str, A
         parsed = _parse_ai_json(response)
 
         if parsed["status"] == "ok" and isinstance(parsed["data"].get("tasks"), list):
-            logger.info(
-                "Generated raw %s section on attempt %s with %s task(s)",
-                section_name,
-                attempt,
-                len(parsed["data"]["tasks"]),
-            )
             return parsed["data"]
 
         if parsed["status"] == "ok":
@@ -487,46 +480,15 @@ async def _call_ai_json(section_name: str, prompt_builder, *args) -> dict[str, A
         else:
             previous_error = parsed.get("error", "Invalid tasks response.")
 
-        logger.warning(
-            "Failed to generate raw %s section on attempt %s/%s: %s",
-            section_name,
-            attempt,
-            MAX_ATTEMPTS,
-            previous_error,
-        )
-
     logger.error("Failed to generate raw %s section after %s attempts", section_name, MAX_ATTEMPTS)
     return {"tasks": []}
 
 
-def _payload_preview(payload: Any) -> str:
-    try:
-        preview = json.dumps(payload, ensure_ascii=False, default=str)
-    except (TypeError, ValueError):
-        preview = repr(payload)
-
-    if len(preview) > LOG_PAYLOAD_PREVIEW_LENGTH:
-        return f"{preview[:LOG_PAYLOAD_PREVIEW_LENGTH]}..."
-
-    return preview
-
-
 def _log_skipped_task(section_name: str, task_type: Any, reason: str, payload: Any) -> None:
-    logger.warning(
-        "Skipped %s task in %s section: %s. Received: %s",
-        task_type or "unknown",
-        section_name,
-        reason,
-        _payload_preview(payload),
-    )
+    return None
 
 
 def _log_section_result(section_name: str, tasks: list[dict[str, Any]]) -> dict[str, Any]:
-    if tasks:
-        logger.info("Generated %s section with %s accepted task(s)", section_name, len(tasks))
-    else:
-        logger.warning("Generated %s section has no accepted tasks", section_name)
-
     return {"tasks": tasks}
 
 
@@ -706,15 +668,12 @@ async def _generate_audio_file(mode: str, script: list[dict[str, str]]) -> dict[
         response = {"status": "error", "error": f"Audio generation timed out after {MEDIA_TIMEOUT} seconds."}
 
     if isinstance(response, dict) and response.get("status") == "ok" and response.get("audio_base64"):
-        logger.info("Generated listening audio file")
         return {
             "type": "file",
             "file_type": "audio",
             "base64": response["audio_base64"],
         }
 
-    error = response.get("error", "Audio generation returned an invalid response") if isinstance(response, dict) else "Audio generation returned a non-dictionary response"
-    logger.warning("Audio file generation failed, falling back to transcript note: %s", error)
     transcript = _script_to_text(script)
 
     return {
@@ -777,15 +736,12 @@ async def _generate_image_file(description: str) -> dict[str, Any]:
         response = {"status": "error", "error": f"Image generation timed out after {MEDIA_TIMEOUT} seconds."}
 
     if isinstance(response, dict) and response.get("status") == "ok" and response.get("image_base64"):
-        logger.info("Generated speaking image file")
         return {
             "type": "file",
             "file_type": "image",
             "base64": response["image_base64"],
         }
 
-    error = response.get("error", "Image generation returned an invalid response") if isinstance(response, dict) else "Image generation returned a non-dictionary response"
-    logger.warning("Image file generation failed, falling back to description note: %s", error)
     return {
         "type": "note",
         "content": (
@@ -868,11 +824,6 @@ async def _generate_sections(brief: dict[str, Any]) -> dict[str, Any]:
 
     if len(valid_vocabulary) >= 4:
         jobs["vocabulary"] = _generate_vocabulary_section(topic, vocabulary)
-    elif valid_vocabulary:
-        logger.warning(
-            "Vocabulary section was requested but not generated: at least 4 vocabulary items are required, got %s",
-            len(valid_vocabulary),
-        )
 
     grammar = sections.get("grammar")
     if isinstance(grammar, str) and grammar.strip():
@@ -891,7 +842,6 @@ async def _generate_sections(brief: dict[str, Any]) -> dict[str, Any]:
         jobs["speaking"] = _generate_speaking_section(brief, speaking)
 
     if not jobs:
-        logger.warning("No task sections were scheduled for generation")
         return {}
 
     results = await asyncio.gather(*jobs.values(), return_exceptions=True)
@@ -921,16 +871,7 @@ def generate_tasks(brief: dict[str, Any]) -> dict[str, Any]:
             "error": validation_error,
         }
 
-    logger.info("Starting task generation for topic: %s", brief["topic"])
     sections = asyncio.run(_generate_sections(brief))
-    empty_sections = [
-        name
-        for name, section in sections.items()
-        if not isinstance(section.get("tasks"), list) or not section["tasks"]
-    ]
-
-    if empty_sections:
-        logger.warning("Task generation finished with empty section(s): %s", ", ".join(empty_sections))
 
     return {
         "status": "ok",
